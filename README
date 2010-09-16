@@ -1,0 +1,7 @@
+to compile and use it:
+
+enter in the tre-0.8.0 directory
+./configure && make
+then in the parent directory
+make
+
