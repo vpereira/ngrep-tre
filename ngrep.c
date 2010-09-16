@@ -135,7 +135,6 @@ pcre_extra *pattern_extra = NULL;
 #elif USE_TRE
 int re_err = 0;
 static regex_t preg;	
-static regex_t delim;
 static regaparams_t match_params;
 const char *delim_regexp = "\n";
 #else
@@ -528,15 +527,6 @@ int main(int argc, char **argv) {
               fprintf(stderr, "%s:\n", errbuf);
               clean_exit(-1);
             }
-            re_err = tre_regcomp(&delim, delim_regexp, REG_EXTENDED | REG_NEWLINE);
-            if (re_err)
-            {
-              char errbuf[256];
-              tre_regerror(re_err, &preg, errbuf, sizeof(errbuf));
-              fprintf(stderr, "%s\n",errbuf);
-              clean_exit(-1);
-            }
-
 #else
             re_err = re_compile_pattern(match_data, strlen(match_data), &pattern);
             if (re_err) {
@@ -934,10 +924,13 @@ int8_t re_match_func(unsigned char *data, uint32_t len) {
             return 0;
     }
 #elif USE_TRE
-    if (tre_regexec(&delim, "", 0, NULL, 0) == REG_OK)
+    switch(tre_regnexec(&preg, data, len , 0,NULL, 0))
     {
-      perror("she is dead, jim\n");
-      clean_exit(-2);
+	case REG_NOMATCH:
+		return 0;
+        case REG_ESPACE:
+		perror("she's dead, jim\n");
+            	clean_exit(-2);
     }
     
 #else
